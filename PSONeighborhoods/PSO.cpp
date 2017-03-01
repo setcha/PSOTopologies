@@ -24,7 +24,7 @@ void pso(Info* info) {
             double r = (double) rand() / (RAND_MAX);
             p.values[j] = 1000.0 - r *100.0; // this was pulled from his code. Need to ask if this is correct
         }
-        
+        p.pBest = std::numeric_limits<double>::max();
         setNeighborhood(info, &p);
         info->swarm[i] = p;
 
@@ -34,6 +34,17 @@ void pso(Info* info) {
     long currGen = 0;
     while(currGen < info->iterations) {
         for(int i = 0; i < info->nswarm; i++) {
+            //getNextPosition
+            
+            
+            double currEval = evaluate(*info, info->swarm[i]);
+            if (currEval < info->swarm[i].pBest) {
+                info->swarm[i].pBest = currEval;
+//                info->swarm[i].values = thePositionWeJustFound
+            }
+            
+            double gBest = bestInNeighborhood(*info, info->swarm[i]);
+            
             
             
             
