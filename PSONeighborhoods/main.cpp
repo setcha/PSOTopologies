@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+#include <random>
 #include "PSO.hpp"
 /*
  • which neighborhood topology to test (gl, ri, vn, ra) • the size of the swarm,
@@ -22,6 +23,7 @@ float chi = 0.7298;
 
 int main(int argc, const char * argv[]) {
     Info info;
+    srand(NULL);
     if(argc != 5) {
         printf("ERROR: Arguments were not included. %d \n", argc);
         return 1;
@@ -34,7 +36,7 @@ int main(int argc, const char * argv[]) {
     info.dim = atol(argv[5]);
     
     
-    pso(info);
+    pso(&info);
     
     
     

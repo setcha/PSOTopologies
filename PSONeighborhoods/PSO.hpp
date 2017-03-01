@@ -12,13 +12,16 @@
 #include <stdio.h>
 #include <string>
 #include <math.h>
+#include <random>
+
 
 #endif /* PSO_hpp */
 
 typedef struct _particle {
     double* values;
     double pBest;
-//    Particle* neighbors;
+    long* neighbors;
+    long neighborhoodSize;
     
 } Particle;
 
@@ -33,8 +36,24 @@ typedef struct _info {
 } Info;
 
 
-void pso(Info info);
+void pso(Info* info);
 
-double evalRosenbrock (double* particle, Info info);
-double evalAckley (double* particle, Info info);
-double evalRastrigin (double* particle, Info info);
+
+//Neighborhood functions
+void setNeighborhood(Info* info, Particle* particle);
+void globalNeighborhood(Info info, Particle* particle);
+void ringNeighborhood(Info info, Particle* particle);
+void vonNeumannNeighborhood(Info info, Particle* particle);
+void randomNeighborhood(Info info, Particle* particle);
+
+
+
+//Evaluate Functions
+double evaluate(Info info, Particle particle);
+
+double evalRosenbrock (Info info, Particle particle);
+double evalAckley(Info info, Particle particle);
+double evalRastrigin(Info info, Particle particle);
+
+//Helper functions
+long RandomLong(long min, long max);
