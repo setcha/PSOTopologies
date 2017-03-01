@@ -9,7 +9,7 @@
 #ifndef PSO_hpp
 #define PSO_hpp
 
-#include <stdio.h>
+#include <iostream>
 #include <string>
 #include <math.h>
 #include <random>
@@ -26,6 +26,7 @@ typedef struct _particle {
     double* gBest_position;
     long* neighbors;
     long neighborhoodSize;
+    int index;
     
 } Particle;
 

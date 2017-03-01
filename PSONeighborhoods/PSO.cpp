@@ -16,21 +16,44 @@ double CONSTRICTION_FACTOR = 0.7298;
 double CHI_1 = 2.05;
 double CHI_2 = 2.05;
 
+double rosenbrockPos[2] = {15.0,30.0};
+double ackleyPos[2] = {16.0,32.0};
+double rastriginPos[2] = {2.56,5.12};
+double rosenbrockVel[2] = {-2.0,2.0};
+double ackleyVel[2] = {-2.0,4.0};
+double rastriginVel[2] = {-2.0,4.0};
+
+double GlobalBest = std::numeric_limits<double>::max();
+
+
 void pso(Info* info) {
     //double swarm[info.nswarm][info.dim];
     info->swarm = new Particle[info->nswarm];
+    
     //initialize particles
     for(int i = 0; i < info->nswarm; i++) {
         Particle p;
+        p.index = i;
         p.position = new double[info->dim];
         p.velocity = new double[info->dim];
+        
         for(int j = 0; j < info->dim; j++) {
-            double r = (double) rand() / (RAND_MAX);
-            p.position[j] = 1000.0 - r *100.0; // this was pulled from his code. Need to ask if this is correct
-            double r1 = (double) rand() / (RAND_MAX);
-            p.velocity[j] = 1000.0 - r1 *100.0;
+            if(info->func == "rok") {
+                p.position[j] = RandomDouble(rosenbrockPos[0], rosenbrockPos[1]);
+                p.velocity[j] = RandomDouble(rosenbrockVel[0], rosenbrockVel[1]);
+
+            } else if (info->func == "ack") {
+                p.position[j] = RandomDouble(ackleyPos[0], ackleyPos[1]);
+                p.velocity[j] = RandomDouble(ackleyVel[0], ackleyVel[1]);
+            } else if (info->func == "ras") {
+                p.position[j] = RandomDouble(rastriginPos[0], rastriginPos[1]);
+                p.velocity[j] = RandomDouble(rastriginVel[0], rastriginVel[1]);
+
+            } else {
+                printf("The evaluation function input is incorrect \n");
+                exit(0);
+            }
         }
-        p.pBest = std::numeric_limits<double>::max();
         setNeighborhood(info, &p);
         p.pBest = evaluate(*info, p);
         info->swarm[i] = p;
@@ -46,16 +69,26 @@ void pso(Info* info) {
             if (currEval < info->swarm[i].pBest) {
                 info->swarm[i].pBest = currEval;
                 info->swarm[i].pBest_position = info->swarm[i].position;
+                if(currEval < GlobalBest){
+                    GlobalBest = currEval;
+                }
             }
         }
         for(int i = 0; i < info->nswarm; i++) {
             bestInNeighborhood(*info, &info->swarm[i]);
+            for(int k = 0; k < info->dim; k++) {
+                std::cout<<info->swarm[i].gBest_position[k]<<" ";
+            }
+            std::cout<<std::endl;
         }
-        
+
         for(int i = 0; i < info->nswarm; i++) {
             updateVelocity(*info, &info->swarm[i]);
             updatePosition(*info, &info->swarm[i]);
         }
+        currGen++;
+        std::cout<<"Generation: "<< currGen<< " "<< (double)currGen/(double)info->iterations<<std::endl;
+        std::cout <<GlobalBest<<std::endl;
     }
 }
 
@@ -75,6 +108,7 @@ void bestInNeighborhood(Info info, Particle* particle) {
     double theBest = std::numeric_limits<double>::max();
     for (int i = 0; i < particle->neighborhoodSize; i++) {
         if(info.swarm[particle->neighbors[i]].pBest < theBest) {
+            
             theBest = info.swarm[particle->neighbors[i]].pBest;
             info.swarm[particle->neighbors[i]].gBest_position= info.swarm[particle->neighbors[i]].position;
         }
@@ -88,6 +122,7 @@ void setNeighborhood(Info* info, Particle* particle) {
     if(info->neighborhood == "gl") {
         particle->neighborhoodSize = info->nswarm;
         globalNeighborhood(*info, particle);
+        
     } else if (info->neighborhood == "ri") {
         particle->neighborhoodSize = RING_SIZE;
         ringNeighborhood(*info, particle);
@@ -119,8 +154,18 @@ void globalNeighborhood(Info info, Particle* particle) {
 
 
 void ringNeighborhood(Info info, Particle* particle) {
-    
-//set neighborhood to particle->neighborhood
+    particle->neighbors = new long[RING_SIZE];
+    if(particle->index == 0) {
+        particle->neighbors[0] = info.nswarm-1;
+    } else {
+        particle->neighbors[0] = particle->index - 1;
+        
+    }
+    if(particle->index == info.nswarm-1) {
+        particle->neighbors[1] = 0;
+    } else {
+        particle->neighbors[1] = particle->index + 1;
+    }
 }
 
 void vonNeumannNeighborhood(Info info, Particle* particle) {
@@ -129,6 +174,7 @@ void vonNeumannNeighborhood(Info info, Particle* particle) {
 }
 
 void randomNeighborhood(Info info, Particle* particle) {
+    particle->neighbors = new long[particle->neighborhoodSize];
 
     for(int i = 0; i < particle->neighborhoodSize-1; i++) {
         particle->neighbors[i] = particle->neighborhoodSize;
@@ -216,9 +262,8 @@ long RandomLong(long min, long max) {
 
 //NEED TO FIX THIS FUNCTION
 double RandomDouble(double min, double max) {
-    double range = max - min;
-    double num = 1;//rand() % range + min;
-    return num;
+    double f = (double)rand() / RAND_MAX;
+    return min + f * (max - min);
 }
                                              
                                              
