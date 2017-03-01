@@ -18,8 +18,12 @@
 #endif /* PSO_hpp */
 
 typedef struct _particle {
-    double* values;
+    double* position;
+    double* velocity;
     double pBest;
+    double* pBest_position;
+    double gBest;
+    double* gBest_position;
     long* neighbors;
     long neighborhoodSize;
     
@@ -38,7 +42,10 @@ typedef struct _info {
 
 void pso(Info* info);
 
-double bestInNeighborhood(Info info, Particle particle);
+void bestInNeighborhood(Info info, Particle* particle);
+void updateVelocity(Info info, Particle* p);
+void updatePosition(Info info, Particle* p);
+
 
 //Neighborhood functions
 void setNeighborhood(Info* info, Particle* particle);
@@ -58,3 +65,4 @@ double evalRastrigin(Info info, Particle particle);
 
 //Helper functions
 long RandomLong(long min, long max);
+double RandomDouble(double min, double max);

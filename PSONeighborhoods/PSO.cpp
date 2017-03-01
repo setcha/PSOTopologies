@@ -12,6 +12,9 @@
 long GLOBAL_SIZE = 1;
 long RING_SIZE = 2;
 long VON_NEUMANN_SIZE = 4;
+double CONSTRICTION_FACTOR = 0.7298;
+double CHI_1 = 2.05;
+double CHI_2 = 2.05;
 
 void pso(Info* info) {
     //double swarm[info.nswarm][info.dim];
@@ -19,13 +22,17 @@ void pso(Info* info) {
     //initialize particles
     for(int i = 0; i < info->nswarm; i++) {
         Particle p;
-        p.values = new double[info->dim];
+        p.position = new double[info->dim];
+        p.velocity = new double[info->dim];
         for(int j = 0; j < info->dim; j++) {
             double r = (double) rand() / (RAND_MAX);
-            p.values[j] = 1000.0 - r *100.0; // this was pulled from his code. Need to ask if this is correct
+            p.position[j] = 1000.0 - r *100.0; // this was pulled from his code. Need to ask if this is correct
+            double r1 = (double) rand() / (RAND_MAX);
+            p.velocity[j] = 1000.0 - r1 *100.0;
         }
         p.pBest = std::numeric_limits<double>::max();
         setNeighborhood(info, &p);
+        p.pBest = evaluate(*info, p);
         info->swarm[i] = p;
 
     }
@@ -34,47 +41,44 @@ void pso(Info* info) {
     long currGen = 0;
     while(currGen < info->iterations) {
         for(int i = 0; i < info->nswarm; i++) {
-            //getNextPosition
-            
             
             double currEval = evaluate(*info, info->swarm[i]);
             if (currEval < info->swarm[i].pBest) {
                 info->swarm[i].pBest = currEval;
-//                info->swarm[i].values = thePositionWeJustFound
+                info->swarm[i].pBest_position = info->swarm[i].position;
             }
-            
-            double gBest = bestInNeighborhood(*info, info->swarm[i]);
-            
-            
-            
-            
-            
         }
-
+        for(int i = 0; i < info->nswarm; i++) {
+            bestInNeighborhood(*info, &info->swarm[i]);
+        }
         
-        
-        //p.pBest = evaluate(*info, p);
-
-        
-        
-        
-    
-        
-    
+        for(int i = 0; i < info->nswarm; i++) {
+            updateVelocity(*info, &info->swarm[i]);
+            updatePosition(*info, &info->swarm[i]);
+        }
     }
-
-    
 }
 
+void updateVelocity(Info info, Particle* p) {
+    for(int i = 0; i < info.dim; i++) {
+        p->velocity[i] = CONSTRICTION_FACTOR * (p->velocity[i] + (RandomDouble(0,CHI_1)*(p->pBest_position[i] - p->position[i])) + (RandomDouble(0,CHI_2) *(p->gBest_position[i]- p->position[i])));
+    }
+}
 
-double bestInNeighborhood(Info info, Particle particle) {
+void updatePosition(Info info, Particle* p) {
+    for(int i = 0; i < info.dim; i++) {
+        p->position[i] = p->position[i] + p->velocity[i];
+    }
+}
+
+void bestInNeighborhood(Info info, Particle* particle) {
     double theBest = std::numeric_limits<double>::max();
-    for (int i = 0; i < particle.neighborhoodSize; i++) {
-        if(info.swarm[particle.neighbors[i]].pBest < theBest) {
-            theBest = info.swarm[particle.neighbors[i]].pBest;
+    for (int i = 0; i < particle->neighborhoodSize; i++) {
+        if(info.swarm[particle->neighbors[i]].pBest < theBest) {
+            theBest = info.swarm[particle->neighbors[i]].pBest;
+            info.swarm[particle->neighbors[i]].gBest_position= info.swarm[particle->neighbors[i]].position;
         }
     }
-    return theBest;
 }
 
 
@@ -173,7 +177,7 @@ double evaluate(Info info, Particle particle) {
 double evalRosenbrock(Info info, Particle particle) {
     double sum = 0.0;
     for(int x = 1; x < info.dim-1; x++) {
-        sum += 100.0 * pow((particle.values[x+1]) - particle.values[x]*particle.values[x], 2.0) + pow(particle.values[x]-1.0, 2.0);
+        sum += 100.0 * pow((particle.position[x+1]) - particle.position[x]*particle.position[x], 2.0) + pow(particle.position[x]-1.0, 2.0);
     }
     return sum;
 }
@@ -184,8 +188,8 @@ double evalAckley(Info info, Particle particle)  {
     double firstSum = 0.0;
     double secondSum = 0.0;
     for(int x = 0; x < info.dim; x++) {
-        firstSum += particle.values[x]*particle.values[x];
-        secondSum += cos(2.0*M_PI*particle.values[x]);
+        firstSum += particle.position[x]*particle.position[x];
+        secondSum += cos(2.0*M_PI*particle.position[x]);
     }
     return -20.0 * exp(-0.2 * sqrt(firstSum/2.0)) - exp(secondSum/2.0) + 20.0 + M_E;
 }
@@ -194,7 +198,7 @@ double evalRastrigin(Info info, Particle particle)  {
     
     double retVal = 0;
     for(int x = 0; x < info.dim; x++) {
-        retVal += particle.values[x]*particle.values[x] - 10.0*cos(2.0*M_PI*x) + 10.0;
+        retVal += particle.position[x]*particle.position[x] - 10.0*cos(2.0*M_PI*x) + 10.0;
     }
     return retVal;
 }
@@ -210,5 +214,11 @@ long RandomLong(long min, long max) {
     return num;
 }
 
-
-
+//NEED TO FIX THIS FUNCTION
+double RandomDouble(double min, double max) {
+    double range = max - min;
+    double num = 1;//rand() % range + min;
+    return num;
+}
+                                             
+                                             
