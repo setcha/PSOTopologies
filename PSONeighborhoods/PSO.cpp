@@ -8,6 +8,7 @@
 
 
 #include "PSO.hpp"
+
 long GLOBAL_SIZE = 1;
 long RING_SIZE = 2;
 long VON_NEUMANN_SIZE = 4;
@@ -23,7 +24,6 @@ void pso(Info* info) {
             double r = (double) rand() / (RAND_MAX);
             p.values[j] = 1000.0 - r *100.0; // this was pulled from his code. Need to ask if this is correct
         }
-        p.pBest = evaluate(*info, p);
         
         setNeighborhood(info, &p);
         info->swarm[i] = p;
@@ -33,6 +33,18 @@ void pso(Info* info) {
     //START THE LEARNING!
     long currGen = 0;
     while(currGen < info->iterations) {
+        for(int i = 0; i < info->nswarm; i++) {
+            
+            
+            
+            
+        }
+
+        
+        
+        //p.pBest = evaluate(*info, p);
+
+        
         
         
     
@@ -42,6 +54,20 @@ void pso(Info* info) {
 
     
 }
+
+
+double bestInNeighborhood(Info info, Particle particle) {
+    double theBest = std::numeric_limits<double>::max();
+    for (int i = 0; i < particle.neighborhoodSize; i++) {
+        if(info.swarm[particle.neighbors[i]].pBest < theBest) {
+            theBest = info.swarm[particle.neighbors[i]].pBest;
+        }
+    }
+    return theBest;
+}
+
+
+
 /* MARK  NEIGHBORHOOD */
 void setNeighborhood(Info* info, Particle* particle) {
     if(info->neighborhood == "gl") {
@@ -65,6 +91,9 @@ void setNeighborhood(Info* info, Particle* particle) {
         exit(0);
     }
 }
+
+
+
 
 void globalNeighborhood(Info info, Particle* particle) {
     particle->neighbors = new long[info.nswarm];

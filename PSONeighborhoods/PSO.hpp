@@ -38,6 +38,7 @@ typedef struct _info {
 
 void pso(Info* info);
 
+double bestInNeighborhood(Info info, Particle particle);
 
 //Neighborhood functions
 void setNeighborhood(Info* info, Particle* particle);
